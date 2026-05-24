@@ -39,9 +39,10 @@ jobs:
           curl -fsSL --retry 3 -o work/cover.jpg "$COVER_URL"
 
       - name: Generate vinyl background
+        env:
+          SONG_TITLE: ${{ github.event.client_payload.song_title }}
         run: |
-          COVER_URL=$(cat /tmp/cover_url.txt)
-          python3 scripts/generate_vinyl.py "$COVER_URL" work/vinyl.svg
+          python3 scripts/generate_vinyl.py "$SONG_TITLE" work/vinyl.svg
           python3 scripts/svg_to_png.py work/vinyl.svg work/vinyl_bg.png
 
       - name: Generate subtitles
