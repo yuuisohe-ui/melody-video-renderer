@@ -76,6 +76,7 @@ print('PNG generated')
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
+          ALIGNED_WORDS: ${{ toJson(github.event.client_payload.aligned_words) }}
         run: node scripts/upload_youtube.js
 
       - name: Send callback to Supabase
