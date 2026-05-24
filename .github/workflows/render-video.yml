@@ -19,7 +19,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-noto-cjk ffmpeg inkscape python3-cairosvg
+          sudo apt-get install -y -qq fonts-noto-cjk ffmpeg
+          pip install pillow --break-system-packages
           npm install googleapis
 
       - name: Download audio and cover
@@ -42,8 +43,7 @@ jobs:
         env:
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
         run: |
-          python3 scripts/generate_vinyl.py "$SONG_TITLE" work/vinyl.svg
-          python3 scripts/svg_to_png.py work/vinyl.svg work/vinyl_bg.png
+          python3 scripts/generate_vinyl.py "$SONG_TITLE" work/cover.jpg work/vinyl_bg.png
 
       - name: Generate subtitles
         env:
