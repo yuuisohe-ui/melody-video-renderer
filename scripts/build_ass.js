@@ -1,8 +1,6 @@
 const fs = require('fs');
 const words = JSON.parse(process.env.ALIGNED_WORDS);
 
-const header = "[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\nWrapStyle: 2\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,Noto Sans CJK SC,58,&H00FFFFFF,&H0000FFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,2,5,0,0,0,1\nStyle: Prev,Noto Sans CJK SC,38,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,1,5,0,0,0,1\nStyle: Next,Noto Sans CJK SC,38,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,1,5,0,0,0,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n";
-
 function fmt(s) {
   const h = Math.floor(s/3600);
   const m = Math.floor(s/60)%60;
@@ -14,29 +12,36 @@ function cleanWord(w) {
   return (w || '').replace(/\n/g, '').replace(/\\/g, '').trim();
 }
 
+const header = `[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+WrapStyle: 2
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Cur,Noto Sans CJK SC,52,&H00FFFFFF,&H0000FFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,2,2,600,40,120,1
+Style: Prv,Noto Sans CJK SC,34,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,600,40,220,1
+Style: Nxt,Noto Sans CJK SC,34,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,600,40,40,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+`;
+
 let lines = [];
 
 for (let i = 0; i < words.length; i++) {
-  const w = words[i];
-  const text = cleanWord(w.word);
+  const text = cleanWord(words[i].word);
   if (!text) continue;
-
-  const start = w.startS || 0;
-  const end = w.endS || (start + 2);
+  const start = words[i].startS || 0;
+  const end = words[i].endS || (start + 2);
   const prev = i > 0 ? cleanWord(words[i-1].word) : '';
   const next = i < words.length-1 ? cleanWord(words[i+1].word) : '';
 
-  // 上一行（灰色，上方）
-  if (prev) {
-    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Prev,,0,0,0,," + prev);
-  }
-  // 当前行（白色大字，中间）
-  lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Default,,0,0,0,," + text);
-  // 下一行（灰色，下方）
-  if (next) {
-    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Next,,0,0,0,," + next);
-  }
+  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,${prev}`);
+  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,${text}`);
+  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,${next}`);
 }
 
 fs.writeFileSync('work/subs.ass', header + lines.join('\n'));
-console.log('ASS generated, lines: ' + lines.length);
+console.log('ASS generated: ' + lines.length);
