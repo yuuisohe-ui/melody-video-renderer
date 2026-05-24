@@ -60,15 +60,20 @@ def generate_vinyl_image(song_title, cover_path, output_path, width=1280, height
     hole_r = 8
     draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(10,10,10))
 
-    # 唱臂（折线模拟弯曲）
+    # 唱臂（贝塞尔曲线）
     import numpy as np
+    pivot_x = cx + vinyl_r + 55
+    pivot_y = 65
+    needle_x = cx + int(vinyl_r * 0.52)
+    needle_y = cy - int(vinyl_r * 0.25)
+    
+    ctrl_x = pivot_x - int(vinyl_r * 0.08)
+    ctrl_y = pivot_y + int(height * 0.25)
+    
     points = []
     steps = 20
     for t_i in range(steps+1):
         t = t_i / steps
-        # 贝塞尔曲线: 起点pivot, 控制点, 终点needle
-        ctrl_x = pivot_x - int(vinyl_r * 0.08)
-        ctrl_y = pivot_y + int(height * 0.25)
         x = int((1-t)**2 * pivot_x + 2*(1-t)*t * ctrl_x + t**2 * needle_x)
         y = int((1-t)**2 * pivot_y + 2*(1-t)*t * ctrl_y + t**2 * needle_y)
         points.append((x, y))
