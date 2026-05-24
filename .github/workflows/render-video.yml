@@ -31,22 +31,7 @@ jobs:
         run: |
           mkdir -p work
           curl -fsSL --retry 3 -o work/audio.mp3 "$AUDIO_URL"
-          cat > /tmp/get_cover.py << 'EOF'
-import urllib.parse, urllib.request, json, os
-keywords = os.environ.get('VIDEO_KEYWORDS') or os.environ.get('SONG_TITLE', 'music')
-key = os.environ.get('PIXABAY_KEY', '')
-q = urllib.parse.quote(keywords)
-url = "https://pixabay.com/api/?key=" + key + "&q=" + q + "&image_type=photo&per_page=3"
-try:
-    with urllib.request.urlopen(url) as r:
-        data = json.loads(r.read())
-    hits = data.get('hits', [])
-    cover = hits[0]['largeImageURL'] if hits else ''
-except Exception:
-    cover = ''
-print(cover)
-EOF
-          COVER_URL=$(python3 /tmp/get_cover.py)
+          COVER_URL=$(python3 scripts/get_cover.py)
           if [ -z "$COVER_URL" ]; then
             COVER_URL="https://placehold.co/1280x720/1a1a2e/ffffff?text=Music"
           fi
