@@ -25,25 +25,18 @@ jobs:
       - name: Download audio and cover
         env:
           PIXABAY_KEY: ${{ secrets.PIXABAY_API_KEY }}
-          COVER_URL_INPUT: ${{ github.event.client_payload.cover_url }}
           VIDEO_KEYWORDS: ${{ github.event.client_payload.video_keywords }}
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
           AUDIO_URL: ${{ github.event.client_payload.audio_url }}
         run: |
           mkdir -p work
           curl -fsSL --retry 3 -o work/audio.mp3 "$AUDIO_URL"
-          COVER_URL="$COVER_URL_INPUT"
-          KEYWORDS="$VIDEO_KEYWORDS"
-          if [ -z "$KEYWORDS" ]; then
-            KEYWORDS="$SONG_TITLE"
-          fi
-          if [ -z "$COVER_URL" ]; then
-            python3 - <<PYEOF
+          cat > /tmp/get_cover.py << 'EOF'
 import urllib.parse, urllib.request, json, os
 keywords = os.environ.get('VIDEO_KEYWORDS') or os.environ.get('SONG_TITLE', 'music')
 key = os.environ.get('PIXABAY_KEY', '')
 q = urllib.parse.quote(keywords)
-url = f"https://pixabay.com/api/?key={key}&q={q}&image_type=photo&per_page=3"
+url = "https://pixabay.com/api/?key=" + key + "&q=" + q + "&image_type=photo&per_page=3"
 try:
     with urllib.request.urlopen(url) as r:
         data = json.loads(r.read())
@@ -51,11 +44,9 @@ try:
     cover = hits[0]['largeImageURL'] if hits else ''
 except Exception:
     cover = ''
-with open('/tmp/cover_url.txt', 'w') as f:
-    f.write(cover)
-PYEOF
-            COVER_URL=$(cat /tmp/cover_url.txt)
-          fi
+print(cover)
+EOF
+          COVER_URL=$(python3 /tmp/get_cover.py)
           if [ -z "$COVER_URL" ]; then
             COVER_URL="https://placehold.co/1280x720/1a1a2e/ffffff?text=Music"
           fi
