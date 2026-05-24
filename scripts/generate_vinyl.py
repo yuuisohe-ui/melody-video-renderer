@@ -1,19 +1,12 @@
 import sys
 import os
 from PIL import Image, ImageDraw
-import math
 
 def generate_vinyl_image(song_title, cover_path, output_path, width=1280, height=720):
     img = Image.new('RGB', (width, height), (10, 8, 16))
     draw = ImageDraw.Draw(img)
 
-    vinyl_r = 500
-    cx = int(vinyl_r * 0.15)
-    cy = height // 2
-    label_r = 280
-    cover_r = 240
-
-    # 背景渐变（用矩形模拟）
+    # 背景渐变
     for i in range(width):
         ratio = i / width
         r = int(26 + (8-26)*ratio)
@@ -21,85 +14,76 @@ def generate_vinyl_image(song_title, cover_path, output_path, width=1280, height
         b = int(53 + (16-53)*ratio)
         draw.line([(i, 0), (i, height)], fill=(r, g, b))
 
-    # 紫色光晕
-    glow = Image.new('RGBA', (width, height), (0,0,0,0))
-    glow_draw = ImageDraw.Draw(glow)
-    for r_step in range(200, 0, -1):
-        alpha = int(60 * (1 - r_step/200))
-        glow_draw.ellipse([cx-r_step, cy-r_step, cx+r_step, cy+r_step],
-                         fill=(64, 32, 160, alpha))
-    img.paste(Image.alpha_composite(Image.new('RGBA', (width,height),(0,0,0,0)), glow).convert('RGB'),
-              mask=glow.split()[3])
+    vinyl_r = 500
+    cx = int(vinyl_r * 0.15)
+    cy = height // 2
+    label_r = 280
+    cover_r = 240
 
     # 唱片主体
     draw.ellipse([cx-vinyl_r, cy-vinyl_r, cx+vinyl_r, cy+vinyl_r],
-                fill=(22, 22, 22))
+                fill=(18, 18, 18))
+    draw.ellipse([cx-vinyl_r+2, cy-vinyl_r+2, cx+vinyl_r-2, cy+vinyl_r-2],
+                outline=(58, 58, 58), width=2)
 
-    # 凹槽
-    for i in range(6, 48):
-        r = int(vinyl_r * (0.35 + i * 0.013))
-        if r > vinyl_r - 10:
+    # 凹槽（只画10条，间距大）
+    for i in range(10):
+        r = int(vinyl_r * 0.38 + i * vinyl_r * 0.055)
+        if r > vinyl_r - 15:
             break
-        color = (80, 80, 80) if i % 5 == 0 else (50, 50, 50)
-        draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=color, width=1)
+        draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=(45, 45, 45), width=1)
 
     # 金色标签
-    label_colors = [(240,208,112),(212,168,75),(184,136,46),(122,90,26)]
-    for idx, lc in enumerate(label_colors):
-        lr = label_r - idx * (label_r//4)
-        if lr > 0:
-            draw.ellipse([cx-lr, cy-lr, cx+lr, cy+lr], fill=lc)
+    for idx in range(4):
+        ratio = idx / 4
+        lc = (
+            int(240 - ratio*28),
+            int(208 - ratio*118),
+            int(112 - ratio*86)
+        )
+        lr = label_r - idx * 8
+        draw.ellipse([cx-lr, cy-lr, cx+lr, cy+lr], fill=lc)
 
-    # 封面图（圆形裁剪）
+    # 封面图（正方形）
+    cover_size = cover_r * 2
     if cover_path and os.path.exists(cover_path):
         try:
-            cover = Image.open(cover_path).convert('RGBA')
-            cover = cover.resize((cover_r*2, cover_r*2), Image.LANCZOS)
-            
-            # 圆形蒙版
-            mask = Image.new('L', (cover_r*2, cover_r*2), 0)
-            mask_draw = ImageDraw.Draw(mask)
-            mask_draw.ellipse([0, 0, cover_r*2, cover_r*2], fill=255)
-            
-            # 粘贴封面图
+            cover = Image.open(cover_path).convert('RGB')
+            cover = cover.resize((cover_size, cover_size), Image.LANCZOS)
             cover_x = cx - cover_r
             cover_y = cy - cover_r
-            img.paste(cover, (cover_x, cover_y), mask)
+            img.paste(cover, (cover_x, cover_y))
         except Exception as e:
-            print(f"Cover image error: {e}")
+            print(f"Cover error: {e}")
 
     # 中心孔
-    hole_r = max(6, int(vinyl_r * 0.022))
+    hole_r = 8
     draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(10,10,10))
 
     # 唱臂
-    pivot_x = cx + vinyl_r + 60
-    pivot_y = 70
-    needle_x = cx + int(vinyl_r * 0.55)
-    needle_y = cy - int(vinyl_r * 0.28)
+    pivot_x = cx + vinyl_r + 55
+    pivot_y = 65
+    needle_x = cx + int(vinyl_r * 0.52)
+    needle_y = cy - int(vinyl_r * 0.25)
 
     draw.line([(pivot_x, pivot_y), (needle_x, needle_y)],
-              fill=(201,169,110), width=8)
-    draw.ellipse([needle_x-6, needle_y-6, needle_x+6, needle_y+6],
+              fill=(201,169,110), width=7)
+    draw.ellipse([needle_x-5, needle_y-5, needle_x+5, needle_y+5],
                 fill=(201,169,110))
 
     # 支点
-    pivot_r_size = 18
-    draw.ellipse([pivot_x-pivot_r_size, pivot_y-pivot_r_size,
-                  pivot_x+pivot_r_size, pivot_y+pivot_r_size],
+    pr = 16
+    draw.ellipse([pivot_x-pr, pivot_y-pr, pivot_x+pr, pivot_y+pr],
                 fill=(212,168,75))
-    draw.ellipse([pivot_x-pivot_r_size, pivot_y-pivot_r_size,
-                  pivot_x+pivot_r_size, pivot_y+pivot_r_size],
+    draw.ellipse([pivot_x-pr, pivot_y-pr, pivot_x+pr, pivot_y+pr],
                 outline=(201,169,110), width=2)
-    draw.ellipse([pivot_x-5, pivot_y-5, pivot_x+5, pivot_y+5],
-                fill=(51,51,51))
-
-    # 分隔线
-    right_start = cx + vinyl_r + 40
-    draw.line([(right_start, 80), (right_start, height-80)],
-              fill=(51,51,51), width=1)
+    draw.ellipse([pivot_x-4, pivot_y-4, pivot_x+4, pivot_y+4],
+                fill=(40,40,40))
 
     # 歌曲名
+    tx = cx  # 封面图中心X
+    ty = cy + cover_r + 20  # 封面图下方20px
+
     try:
         from PIL import ImageFont
         font_paths = [
@@ -111,23 +95,21 @@ def generate_vinyl_image(song_title, cover_path, output_path, width=1280, height
         font_small = None
         for fp in font_paths:
             if os.path.exists(fp):
-                font_large = ImageFont.truetype(fp, 28)
-                font_small = ImageFont.truetype(fp, 13)
+                font_large = ImageFont.truetype(fp, 36)
+                font_small = ImageFont.truetype(fp, 14)
                 break
+        if font_small:
+            draw.text((tx, ty), "LYRIC VIDEO", fill=(136,136,136), font=font_small, anchor="mt")
         if font_large:
-            draw.text((right_start+40, height-90), "LYRIC VIDEO",
-                     fill=(136,136,136), font=font_small)
-            draw.text((right_start+40, height-55), song_title,
-                     fill=(255,255,255), font=font_large)
+            draw.text((tx, ty + 25), song_title, fill=(255,255,255), font=font_large, anchor="mt")
         else:
-            draw.text((right_start+40, height-90), "LYRIC VIDEO", fill=(136,136,136))
-            draw.text((right_start+40, height-55), song_title, fill=(255,255,255))
+            draw.text((tx, ty), "LYRIC VIDEO", fill=(136,136,136))
+            draw.text((tx, ty + 25), song_title, fill=(255,255,255))
     except Exception as e:
         print(f"Font error: {e}")
-        draw.text((right_start+40, height-55), song_title, fill=(255,255,255))
 
-    img.save(output_path, 'PNG', quality=95)
-    print(f"Image generated: {output_path}")
+    img.save(output_path, 'PNG')
+    print(f"Done: {output_path}")
 
 if __name__ == "__main__":
     song_title = sys.argv[1] if len(sys.argv) > 1 else "AI 노래"
