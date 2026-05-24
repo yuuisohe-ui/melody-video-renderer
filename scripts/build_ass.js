@@ -28,13 +28,13 @@ for (let i = 0; i < words.length; i++) {
 
   // 上一行（灰色，上方）
   if (prev) {
-    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Prev,,0,0,0,{\\pos(900,260)}," + prev);
+    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Prev,,0,0,0,," + prev);
   }
   // 当前行（白色大字，中间）
-  lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Default,,0,0,0,{\\pos(900,370)}," + text);
+  lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Default,,0,0,0,," + text);
   // 下一行（灰色，下方）
   if (next) {
-    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Next,,0,0,0,{\\pos(900,480)}," + next);
+    lines.push("Dialogue: 0," + fmt(start) + "," + fmt(end) + ",Next,,0,0,0,," + next);
   }
 }
 
