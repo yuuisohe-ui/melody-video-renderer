@@ -26,7 +26,15 @@ jobs:
         run: |
           mkdir -p work
           curl -fsSL --retry 3 -o work/audio.mp3 "${{ github.event.client_payload.audio_url }}"
-          curl -fsSL --retry 3 -o work/cover.jpg "${{ github.event.client_payload.cover_url }}"
+          COVER_URL="${{ github.event.client_payload.cover_url }}"
+          if [ -z "$COVER_URL" ]; then
+            KEYWORDS="${{ github.event.client_payload.song_title }}"
+            COVER_URL=$(curl -s "https://pixabay.com/api/?key=${{ secrets.PIXABAY_API_KEY }}&q=${KEYWORDS}&image_type=photo&per_page=3" | python3 -c "import sys,json; hits=json.load(sys.stdin)['hits']; print(hits[0]['largeImageURL'] if hits else '')")
+          fi
+          if [ -z "$COVER_URL" ]; then
+            COVER_URL="https://placehold.co/1280x720/1a1a2e/ffffff?text=Music"
+          fi
+          curl -fsSL --retry 3 -o work/cover.jpg "$COVER_URL"
           ffmpeg -y -i work/cover.jpg -vf "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720" work/cover_resized.jpg
 
       - name: Generate subtitles
