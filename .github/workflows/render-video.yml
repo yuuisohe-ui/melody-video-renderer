@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-noto-cjk ffmpeg
+          sudo apt-get install -y -qq fonts-noto-cjk ffmpeg inkscape python3-cairosvg
           npm install googleapis
 
       - name: Download audio and cover
@@ -33,10 +33,20 @@ jobs:
           curl -fsSL --retry 3 -o work/audio.mp3 "$AUDIO_URL"
           COVER_URL=$(python3 scripts/get_cover.py)
           if [ -z "$COVER_URL" ]; then
-            COVER_URL="https://placehold.co/1280x720/1a1a2e/ffffff?text=Music"
+            COVER_URL="https://placehold.co/400x400/1a1a2e/ffffff?text=Music"
           fi
+          echo "$COVER_URL" > /tmp/cover_url.txt
           curl -fsSL --retry 3 -o work/cover.jpg "$COVER_URL"
-          ffmpeg -y -i work/cover.jpg -vf "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720" work/cover_resized.jpg
+
+      - name: Generate vinyl background
+        run: |
+          COVER_URL=$(cat /tmp/cover_url.txt)
+          python3 scripts/generate_vinyl.py "$COVER_URL" work/vinyl.svg
+          python3 -c "
+import cairosvg
+cairosvg.svg2png(url='work/vinyl.svg', write_to='work/vinyl_bg.png', output_width=1280, output_height=720)
+print('PNG generated')
+"
 
       - name: Generate subtitles
         env:
@@ -45,12 +55,14 @@ jobs:
         run: node scripts/build_ass.js
 
       - name: Render video with ffmpeg
+        env:
+          SONG_TITLE: ${{ github.event.client_payload.song_title }}
         run: |
           DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 work/audio.mp3)
           ffmpeg -y \
-            -loop 1 -framerate 30 -t "$DUR" -i work/cover_resized.jpg \
+            -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
             -i work/audio.mp3 \
-            -filter_complex "[0:v]scale=1600:900,zoompan=z='min(zoom+0.0008,1.15)':d=900:s=1280x720:fps=30,subtitles='work/subs.ass':fontsdir=/usr/share/fonts[bg];color=c=0xffffff@0.8:s=1280x4:d=${DUR}[barbg];[bg][barbg]overlay=0:H-20:shortest=1[withbar];color=c=0xffd700:s=1280x4:d=${DUR}[barfg];[withbar][barfg]overlay='x=-W+(W*t/${DUR})':y=H-20:shortest=1[v]" \
+            -filter_complex "[0:v]subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
             -map "[v]" -map 1:a \
             -c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p \
             -c:a aac -b:a 192k \
