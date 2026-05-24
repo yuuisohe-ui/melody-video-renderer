@@ -1,5 +1,14 @@
 import sys
 import os
+import base64
+
+def image_to_base64(image_path):
+    try:
+        with open(image_path, 'rb') as f:
+            data = base64.b64encode(f.read()).decode('utf-8')
+        return f"data:image/jpeg;base64,{data}"
+    except:
+        return ""
 
 def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
     vinyl_r = 380
@@ -24,6 +33,18 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
         opacity = 0.04 if i % 5 == 0 else 0.015
         color = "#777777" if i % 5 == 0 else "#444444"
         grooves += f'<circle cx="{cx}" cy="{cy}" r="{r:.1f}" fill="none" stroke="{color}" stroke-width="0.8" opacity="{opacity}"/>\n'
+
+    cover_data = image_to_base64("work/cover.jpg")
+    cover_img = ""
+    if cover_data:
+        cover_img = f'''
+  <image href="{cover_data}"
+         x="{cx - cover_r}" y="{cy - cover_r}"
+         width="{cover_r * 2}" height="{cover_r * 2}"
+         clip-path="url(#coverClip)"
+         preserveAspectRatio="xMidYMid slice"/>'''
+
+    right_start = cx + vinyl_r + 40
 
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -63,15 +84,11 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
 
   <!-- 배경 -->
   <rect width="{width}" height="{height}" fill="url(#bgGrad)"/>
-
-  <!-- 글로우 -->
   <ellipse cx="{cx}" cy="{cy}" rx="{vinyl_r + 60}" ry="{vinyl_r + 60}" fill="url(#glowGrad)"/>
 
-  <!-- 바이닐 본체 -->
+  <!-- 바이닐 -->
   <circle cx="{cx}" cy="{cy}" r="{vinyl_r}" fill="url(#vinylGrad)"/>
   <circle cx="{cx}" cy="{cy}" r="{vinyl_r - 2}" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-
-  <!-- 凹槽 -->
   {grooves}
 
   <!-- 금색 라벨 -->
@@ -80,12 +97,8 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
            rx="{int(label_r*0.38)}" ry="{int(label_r*0.22)}"
            fill="white" opacity="0.15"/>
 
-  <!-- 封面图 (로컬 파일) -->
-  <image href="work/cover.jpg"
-         x="{cx - cover_r}" y="{cy - cover_r}"
-         width="{cover_r * 2}" height="{cover_r * 2}"
-         clip-path="url(#coverClip)"
-         preserveAspectRatio="xMidYMid slice"/>
+  <!-- 封面图 (base64) -->
+  {cover_img}
 
   <!-- 중심 구멍 -->
   <circle cx="{cx}" cy="{cy}" r="{max(6, int(vinyl_r * 0.022))}" fill="#0a0a0a"/>
@@ -94,38 +107,32 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
   <!-- 唱臂 -->
   <line x1="{pivot_x}" y1="{pivot_y}"
         x2="{needle_x}" y2="{needle_y}"
-        stroke="url(#armGrad)" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="{needle_x}" cy="{needle_y}" r="5" fill="#c9a96e"/>
+        stroke="url(#armGrad)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="{needle_x}" cy="{needle_y}" r="6" fill="#c9a96e"/>
 
   <!-- 支点 -->
   <circle cx="{pivot_x}" cy="{pivot_y}" r="{pivot_r}" fill="url(#pivotGrad)"/>
   <circle cx="{pivot_x}" cy="{pivot_y}" r="{pivot_r}" fill="none" stroke="#c9a96e" stroke-width="1.5"/>
-  <ellipse cx="{pivot_x - 4}" cy="{pivot_y - 5}"
-           rx="6" ry="4"
-           fill="white" opacity="0.25"/>
+  <ellipse cx="{pivot_x - 4}" cy="{pivot_y - 5}" rx="6" ry="4" fill="white" opacity="0.25"/>
   <circle cx="{pivot_x}" cy="{pivot_y}" r="4" fill="#333"/>
 
   <!-- 구분선 -->
-  <line x1="{cx + vinyl_r + 20}" y1="80" x2="{cx + vinyl_r + 20}" y2="{height - 80}"
+  <line x1="{right_start}" y1="80" x2="{right_start}" y2="{height - 80}"
         stroke="#333333" stroke-width="1"/>
 
-  <!-- 歌曲名 왼쪽 아래 -->
-  <text x="{cx - vinyl_r + 20}" y="{height - 60}"
-        fill="#cccccc" font-size="13"
+  <!-- 歌曲名 -->
+  <text x="{right_start + 40}" y="{height - 80}"
+        fill="#888888" font-size="13"
         font-family="Noto Sans CJK SC, sans-serif"
         letter-spacing="3">LYRIC VIDEO</text>
-  <text x="{cx - vinyl_r + 20}" y="{height - 30}"
-        fill="#ffffff" font-size="24" font-weight="bold"
+  <text x="{right_start + 40}" y="{height - 48}"
+        fill="#ffffff" font-size="28" font-weight="bold"
         font-family="Noto Sans CJK SC, sans-serif">{song_title}</text>
 
-  <!-- 진행 바 배경 -->
-  <rect x="{cx + vinyl_r + 40}" y="{height - 50}"
-        width="{width - (cx + vinyl_r + 40) - 40}" height="3"
-        fill="#333333" rx="2"/>
-  <!-- 진행 바 (30% 위치) -->
-  <rect x="{cx + vinyl_r + 40}" y="{height - 50}"
-        width="{int((width - (cx + vinyl_r + 40) - 40) * 0.3)}" height="3"
-        fill="#c9a96e" rx="2"/>
+  <!-- 진행 바 -->
+  <rect x="{right_start + 40}" y="{height - 18}"
+        width="{width - right_start - 80}" height="2"
+        fill="#333333" rx="1"/>
 
 </svg>'''
 
