@@ -1,131 +1,136 @@
 import sys
 import os
+from PIL import Image, ImageDraw
+import math
 
-def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
+def generate_vinyl_image(song_title, cover_path, output_path, width=1280, height=720):
+    img = Image.new('RGB', (width, height), (10, 8, 16))
+    draw = ImageDraw.Draw(img)
+
     vinyl_r = 500
-cx = int(vinyl_r * 0.15)
-cy = height // 2
-label_r = 280
-cover_r = 240
+    cx = int(vinyl_r * 0.15)
+    cy = height // 2
+    label_r = 280
+    cover_r = 240
 
+    # 背景渐变（用矩形模拟）
+    for i in range(width):
+        ratio = i / width
+        r = int(26 + (8-26)*ratio)
+        g = int(16 + (8-16)*ratio)
+        b = int(53 + (16-53)*ratio)
+        draw.line([(i, 0), (i, height)], fill=(r, g, b))
+
+    # 紫色光晕
+    glow = Image.new('RGBA', (width, height), (0,0,0,0))
+    glow_draw = ImageDraw.Draw(glow)
+    for r_step in range(200, 0, -1):
+        alpha = int(60 * (1 - r_step/200))
+        glow_draw.ellipse([cx-r_step, cy-r_step, cx+r_step, cy+r_step],
+                         fill=(64, 32, 160, alpha))
+    img.paste(Image.alpha_composite(Image.new('RGBA', (width,height),(0,0,0,0)), glow).convert('RGB'),
+              mask=glow.split()[3])
+
+    # 唱片主体
+    draw.ellipse([cx-vinyl_r, cy-vinyl_r, cx+vinyl_r, cy+vinyl_r],
+                fill=(22, 22, 22))
+
+    # 凹槽
+    for i in range(6, 48):
+        r = int(vinyl_r * (0.35 + i * 0.013))
+        if r > vinyl_r - 10:
+            break
+        color = (80, 80, 80) if i % 5 == 0 else (50, 50, 50)
+        draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=color, width=1)
+
+    # 金色标签
+    label_colors = [(240,208,112),(212,168,75),(184,136,46),(122,90,26)]
+    for idx, lc in enumerate(label_colors):
+        lr = label_r - idx * (label_r//4)
+        if lr > 0:
+            draw.ellipse([cx-lr, cy-lr, cx+lr, cy+lr], fill=lc)
+
+    # 封面图（圆形裁剪）
+    if cover_path and os.path.exists(cover_path):
+        try:
+            cover = Image.open(cover_path).convert('RGBA')
+            cover = cover.resize((cover_r*2, cover_r*2), Image.LANCZOS)
+            
+            # 圆形蒙版
+            mask = Image.new('L', (cover_r*2, cover_r*2), 0)
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.ellipse([0, 0, cover_r*2, cover_r*2], fill=255)
+            
+            # 粘贴封面图
+            cover_x = cx - cover_r
+            cover_y = cy - cover_r
+            img.paste(cover, (cover_x, cover_y), mask)
+        except Exception as e:
+            print(f"Cover image error: {e}")
+
+    # 中心孔
+    hole_r = max(6, int(vinyl_r * 0.022))
+    draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(10,10,10))
+
+    # 唱臂
     pivot_x = cx + vinyl_r + 60
     pivot_y = 70
-    pivot_r = 14
-
     needle_x = cx + int(vinyl_r * 0.55)
     needle_y = cy - int(vinyl_r * 0.28)
 
+    draw.line([(pivot_x, pivot_y), (needle_x, needle_y)],
+              fill=(201,169,110), width=8)
+    draw.ellipse([needle_x-6, needle_y-6, needle_x+6, needle_y+6],
+                fill=(201,169,110))
+
+    # 支点
+    pivot_r_size = 18
+    draw.ellipse([pivot_x-pivot_r_size, pivot_y-pivot_r_size,
+                  pivot_x+pivot_r_size, pivot_y+pivot_r_size],
+                fill=(212,168,75))
+    draw.ellipse([pivot_x-pivot_r_size, pivot_y-pivot_r_size,
+                  pivot_x+pivot_r_size, pivot_y+pivot_r_size],
+                outline=(201,169,110), width=2)
+    draw.ellipse([pivot_x-5, pivot_y-5, pivot_x+5, pivot_y+5],
+                fill=(51,51,51))
+
+    # 分隔线
     right_start = cx + vinyl_r + 40
+    draw.line([(right_start, 80), (right_start, height-80)],
+              fill=(51,51,51), width=1)
 
-    cover_path = os.path.abspath("work/cover.jpg")
-    cover_img = ""
-    if os.path.exists(cover_path):
-        cover_img = f'''
-  <image href="file://{cover_path}"
-         x="{cx - cover_r}" y="{cy - cover_r}"
-         width="{cover_r * 2}" height="{cover_r * 2}"
-         clip-path="url(#coverClip)"
-         preserveAspectRatio="xMidYMid slice"/>'''
+    # 歌曲名
+    try:
+        from PIL import ImageFont
+        font_paths = [
+            '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',
+            '/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc',
+            '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc',
+        ]
+        font_large = None
+        font_small = None
+        for fp in font_paths:
+            if os.path.exists(fp):
+                font_large = ImageFont.truetype(fp, 28)
+                font_small = ImageFont.truetype(fp, 13)
+                break
+        if font_large:
+            draw.text((right_start+40, height-90), "LYRIC VIDEO",
+                     fill=(136,136,136), font=font_small)
+            draw.text((right_start+40, height-55), song_title,
+                     fill=(255,255,255), font=font_large)
+        else:
+            draw.text((right_start+40, height-90), "LYRIC VIDEO", fill=(136,136,136))
+            draw.text((right_start+40, height-55), song_title, fill=(255,255,255))
+    except Exception as e:
+        print(f"Font error: {e}")
+        draw.text((right_start+40, height-55), song_title, fill=(255,255,255))
 
-    grooves = ""
-    for i in range(6, 48):
-        r = vinyl_r * (0.35 + i * 0.013)
-        if r > vinyl_r - 10:
-            break
-        opacity = 0.04 if i % 5 == 0 else 0.015
-        color = "#777777" if i % 5 == 0 else "#444444"
-        grooves += f'<circle cx="{cx}" cy="{cy}" r="{r:.1f}" fill="none" stroke="{color}" stroke-width="0.8" opacity="{opacity}"/>\n'
-
-    svg = f'''<?xml version="1.0" encoding="UTF-8"?>
-<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1a1035"/>
-      <stop offset="100%" stop-color="#080810"/>
-    </linearGradient>
-    <radialGradient id="vinylGrad" cx="40%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#2a2a2a"/>
-      <stop offset="50%" stop-color="#161616"/>
-      <stop offset="100%" stop-color="#080808"/>
-    </radialGradient>
-    <radialGradient id="labelGrad" cx="35%" cy="35%" r="65%">
-      <stop offset="0%" stop-color="#f0d080"/>
-      <stop offset="35%" stop-color="#d4a84b"/>
-      <stop offset="70%" stop-color="#b8882e"/>
-      <stop offset="100%" stop-color="#7a5a1a"/>
-    </radialGradient>
-    <radialGradient id="pivotGrad" cx="35%" cy="35%" r="65%">
-      <stop offset="0%" stop-color="#f0d080"/>
-      <stop offset="100%" stop-color="#8a6520"/>
-    </radialGradient>
-    <linearGradient id="armGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c9a96e"/>
-      <stop offset="40%" stop-color="#e8c870"/>
-      <stop offset="100%" stop-color="#a07830"/>
-    </linearGradient>
-    <radialGradient id="glowGrad" cx="30%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#4020a0" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#4020a0" stop-opacity="0"/>
-    </radialGradient>
-    <clipPath id="coverClip">
-      <circle cx="{cx}" cy="{cy}" r="{cover_r}"/>
-    </clipPath>
-  </defs>
-
-  <!-- 배경 -->
-  <rect width="{width}" height="{height}" fill="url(#bgGrad)"/>
-  <ellipse cx="{cx}" cy="{cy}" rx="{vinyl_r + 60}" ry="{vinyl_r + 60}" fill="url(#glowGrad)"/>
-
-  <!-- 바이닐 -->
-  <circle cx="{cx}" cy="{cy}" r="{vinyl_r}" fill="url(#vinylGrad)"/>
-  <circle cx="{cx}" cy="{cy}" r="{vinyl_r - 2}" fill="none" stroke="#3a3a3a" stroke-width="2"/>
-  {grooves}
-
-  <!-- 금색 라벨 -->
-  <circle cx="{cx}" cy="{cy}" r="{label_r}" fill="url(#labelGrad)"/>
-  <ellipse cx="{cx - int(label_r*0.18)}" cy="{cy - int(label_r*0.22)}"
-           rx="{int(label_r*0.38)}" ry="{int(label_r*0.22)}"
-           fill="white" opacity="0.15"/>
-
-  <!-- 封面图 -->
-  {cover_img}
-
-  <!-- 중심 구멍 -->
-  <circle cx="{cx}" cy="{cy}" r="{max(6, int(vinyl_r * 0.022))}" fill="#0a0a0a"/>
-  <circle cx="{cx}" cy="{cy}" r="{max(3, int(vinyl_r * 0.01))}" fill="#222222"/>
-
-  <!-- 唱臂 -->
-  <line x1="{pivot_x}" y1="{pivot_y}"
-        x2="{needle_x}" y2="{needle_y}"
-        stroke="url(#armGrad)" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="{needle_x}" cy="{needle_y}" r="6" fill="#c9a96e"/>
-
-  <!-- 支点 -->
-  <circle cx="{pivot_x}" cy="{pivot_y}" r="{pivot_r}" fill="url(#pivotGrad)"/>
-  <circle cx="{pivot_x}" cy="{pivot_y}" r="{pivot_r}" fill="none" stroke="#c9a96e" stroke-width="1.5"/>
-  <ellipse cx="{pivot_x - 4}" cy="{pivot_y - 5}" rx="6" ry="4" fill="white" opacity="0.25"/>
-  <circle cx="{pivot_x}" cy="{pivot_y}" r="4" fill="#333"/>
-
-  <!-- 구분선 -->
-  <line x1="{right_start}" y1="80" x2="{right_start}" y2="{height - 80}"
-        stroke="#333333" stroke-width="1"/>
-
-  <!-- 歌曲名 -->
-  <text x="{right_start + 40}" y="{height - 80}"
-        fill="#888888" font-size="13"
-        font-family="Noto Sans CJK SC, sans-serif"
-        letter-spacing="3">LYRIC VIDEO</text>
-  <text x="{right_start + 40}" y="{height - 45}"
-        fill="#ffffff" font-size="28" font-weight="bold"
-        font-family="Noto Sans CJK SC, sans-serif">{song_title}</text>
-
-</svg>'''
-
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(svg)
-    print(f"SVG generated: {output_path}")
+    img.save(output_path, 'PNG', quality=95)
+    print(f"Image generated: {output_path}")
 
 if __name__ == "__main__":
     song_title = sys.argv[1] if len(sys.argv) > 1 else "AI 노래"
-    output = sys.argv[2] if len(sys.argv) > 2 else "work/vinyl.svg"
-    generate_vinyl_svg(song_title, output)
+    cover_path = sys.argv[2] if len(sys.argv) > 2 else "work/cover.jpg"
+    output = sys.argv[3] if len(sys.argv) > 3 else "work/vinyl_bg.png"
+    generate_vinyl_image(song_title, cover_path, output)
