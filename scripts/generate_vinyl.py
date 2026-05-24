@@ -1,22 +1,12 @@
 import sys
 import os
-import base64
-
-def image_to_base64(image_path):
-    try:
-        with open(image_path, 'rb') as f:
-            data = base64.b64encode(f.read()).decode('utf-8')
-        return f"data:image/jpeg;base64,{data}"
-    except:
-        return ""
 
 def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
-    vinyl_r = 380
-    cx = int(vinyl_r * 0.2)
-    cy = height // 2
-
-    label_r = int(vinyl_r * 0.28)
-    cover_r = int(label_r * 0.82)
+    vinyl_r = 500
+cx = int(vinyl_r * 0.15)
+cy = height // 2
+label_r = 280
+cover_r = 240
 
     pivot_x = cx + vinyl_r + 60
     pivot_y = 70
@@ -24,6 +14,18 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
 
     needle_x = cx + int(vinyl_r * 0.55)
     needle_y = cy - int(vinyl_r * 0.28)
+
+    right_start = cx + vinyl_r + 40
+
+    cover_path = os.path.abspath("work/cover.jpg")
+    cover_img = ""
+    if os.path.exists(cover_path):
+        cover_img = f'''
+  <image href="file://{cover_path}"
+         x="{cx - cover_r}" y="{cy - cover_r}"
+         width="{cover_r * 2}" height="{cover_r * 2}"
+         clip-path="url(#coverClip)"
+         preserveAspectRatio="xMidYMid slice"/>'''
 
     grooves = ""
     for i in range(6, 48):
@@ -33,18 +35,6 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
         opacity = 0.04 if i % 5 == 0 else 0.015
         color = "#777777" if i % 5 == 0 else "#444444"
         grooves += f'<circle cx="{cx}" cy="{cy}" r="{r:.1f}" fill="none" stroke="{color}" stroke-width="0.8" opacity="{opacity}"/>\n'
-
-    cover_data = image_to_base64("work/cover.jpg")
-    cover_img = ""
-    if cover_data:
-        cover_img = f'''
-  <image href="{cover_data}"
-         x="{cx - cover_r}" y="{cy - cover_r}"
-         width="{cover_r * 2}" height="{cover_r * 2}"
-         clip-path="url(#coverClip)"
-         preserveAspectRatio="xMidYMid slice"/>'''
-
-    right_start = cx + vinyl_r + 40
 
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -97,7 +87,7 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
            rx="{int(label_r*0.38)}" ry="{int(label_r*0.22)}"
            fill="white" opacity="0.15"/>
 
-  <!-- 封面图 (base64) -->
+  <!-- 封面图 -->
   {cover_img}
 
   <!-- 중심 구멍 -->
@@ -125,14 +115,9 @@ def generate_vinyl_svg(song_title, output_path, width=1280, height=720):
         fill="#888888" font-size="13"
         font-family="Noto Sans CJK SC, sans-serif"
         letter-spacing="3">LYRIC VIDEO</text>
-  <text x="{right_start + 40}" y="{height - 48}"
+  <text x="{right_start + 40}" y="{height - 45}"
         fill="#ffffff" font-size="28" font-weight="bold"
         font-family="Noto Sans CJK SC, sans-serif">{song_title}</text>
-
-  <!-- 진행 바 -->
-  <rect x="{right_start + 40}" y="{height - 18}"
-        width="{width - right_start - 80}" height="2"
-        fill="#333333" rx="1"/>
 
 </svg>'''
 
