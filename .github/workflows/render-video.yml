@@ -42,11 +42,7 @@ jobs:
         run: |
           COVER_URL=$(cat /tmp/cover_url.txt)
           python3 scripts/generate_vinyl.py "$COVER_URL" work/vinyl.svg
-          python3 -c "
-import cairosvg
-cairosvg.svg2png(url='work/vinyl.svg', write_to='work/vinyl_bg.png', output_width=1280, output_height=720)
-print('PNG generated')
-"
+          python3 scripts/svg_to_png.py work/vinyl.svg work/vinyl_bg.png
 
       - name: Generate subtitles
         env:
