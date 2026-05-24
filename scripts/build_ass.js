@@ -16,7 +16,7 @@ function cleanWord(w) {
 }
 
 // 제목
-let lines = ["Dialogue: 0,0:00:00.00,0:00:05.00,Title,,0,0,0,fad(400,400)," + title];
+let lines = [];
 
 // 각 word가 이미 라인 단위이므로 그대로 사용
 for (let i = 0; i < words.length; i++) {
