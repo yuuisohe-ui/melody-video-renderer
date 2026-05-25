@@ -34,10 +34,12 @@ jobs:
           curl -fsSL --retry 3 -o work/audio.mp3 "$AUDIO_URL"
           COVER_URL=$(python3 scripts/get_cover.py)
           if [ -z "$COVER_URL" ]; then
-            COVER_URL="https://placehold.co/400x400/1a1a2e/ffffff?text=Music"
+            COVER_URL="https://placehold.co/420x420/1a1a2e/ffffff?text=Music"
           fi
           echo "$COVER_URL" > /tmp/cover_url.txt
           curl -fsSL --retry 3 -o work/cover.jpg "$COVER_URL"
+          ls -la work/cover.jpg
+          echo "Cover size: $(wc -c < work/cover.jpg) bytes"
 
       - name: Generate vinyl background
         run: |
