@@ -38,7 +38,7 @@ jobs:
           fi
           echo "$COVER_URL" > /tmp/cover_url.txt
           curl -fsSL --retry 3 -o work/cover_raw.jpg "$COVER_URL"
-          ffmpeg -y -i work/cover_raw.jpg work/cover.jpg
+          ffmpeg -y -i work/cover_raw.jpg -update 1 -frames:v 1 work/cover.jpg
           echo "Cover size: $(wc -c < work/cover.jpg) bytes"
 
       - name: Generate vinyl background
