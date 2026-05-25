@@ -70,7 +70,7 @@ for (let i = 0; i < sentences.length; i++) {
   const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join('') : '';
 
   if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an5\\pos(950,260)}${prev}`);
-  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${karaokeText}`);
+lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${karaokeText}`);
   if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an5\\pos(950,460)}${next}`);
 }
 
