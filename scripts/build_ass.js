@@ -38,9 +38,9 @@ for (let i = 0; i < words.length; i++) {
   const prev = i > 0 ? cleanWord(words[i-1].word) : '';
   const next = i < words.length-1 ? cleanWord(words[i+1].word) : '';
 
-  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,${prev}`);
-  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,${text}`);
-  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,${next}`);
+  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,{\\fad(200,200)},${prev}`);
+lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,{\\fad(200,200)},${text}`);
+if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,{\\fad(200,200)},${next}`);
 }
 
 fs.writeFileSync('work/subs.ass', header + lines.join('\n'));
