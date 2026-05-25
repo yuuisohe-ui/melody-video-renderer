@@ -33,8 +33,8 @@ let lines = [];
 for (let i = 0; i < words.length; i++) {
   const text = cleanWord(words[i].word);
   if (!text) continue;
-  const start = words[i].startS || 0;
-  const end = words[i].endS || (start + 2);
+  const start = i === 0 ? 0 : (words[i].startS || 0);
+  const end = i < words.length-1 ? (words[i+1].startS || words[i].endS) : words[i].endS;
   const prev = i > 0 ? cleanWord(words[i-1].word) : '';
   const next = i < words.length-1 ? cleanWord(words[i+1].word) : '';
 
