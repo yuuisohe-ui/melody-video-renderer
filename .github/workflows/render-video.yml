@@ -64,7 +64,7 @@ jobs:
               [0:v]scale=1280:720[bg];\
               [bg][cover]overlay=x=120:y=100[withcover];\
               [withcover]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='${SONG_TITLE}':fontcolor=white:fontsize=28:x=120:y=560,\
-              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스 · 노래 기반 언어 교육 플랫폼':fontcolor=#888888:fontsize=16:x=120:y=595,\
+              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스\·노래 기반 언어 교육 플랫폼':fontcolor=0x888888:fontsize=16:x=120:y=595,\
               subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
             -map "[v]" -map 2:a \
             -c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p \
