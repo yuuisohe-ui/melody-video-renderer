@@ -58,15 +58,15 @@ jobs:
           DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 work/audio.mp3)
           ffmpeg -y \
             -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
-            -loop 1 -t "$DUR" -i work/cover.jpg \
+            -loop 1 -framerate 30 -t "$DUR" -i work/cover.jpg \
             -i work/audio.mp3 \
-            -loop 1 -t "$DUR" -i assets/tonearm.png \
+            -loop 1 -framerate 30 -t "$DUR" -i assets/tonearm.png \
             -filter_complex "\
               [0:v]scale=1280:720[bg];\
               [1:v]scale=420:420,format=rgba[cover];\
               [bg][cover]overlay=x=120:y=100:format=auto[withcover];\
-              [3:v]scale=1280:720,format=rgba[arm];\
-              [withcover][arm]overlay=0:0:format=auto[witharm];\
+              [3:v]format=rgba[arm];\
+              [withcover][arm]overlay=x=0:y=0:format=auto[witharm];\
               [witharm]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='${SONG_TITLE}':fontcolor=white:fontsize=52:x=120:y=580,\
               drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스 · 노래 기반 언어 교육 플랫폼':fontcolor=0x888888:fontsize=28:x=120:y=660,\
               subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
