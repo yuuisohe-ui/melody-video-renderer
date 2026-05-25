@@ -56,22 +56,23 @@ jobs:
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
         run: |
           DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 work/audio.mp3)
+          
+          # 安全处理特殊符号，并导出为环境变量供 FFmpeg 读取
           export SAFE_TITLE=$(echo "${SONG_TITLE}" | sed "s/'/\\\\'/g; s/:/\\\\:/g; s/,/\\\\,/g")
           export SUB_TITLE="멜로디 클래스 · 노래 기반 언어 교육 플랫폼"
+          
           ffmpeg -y \
-            -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
             -loop 1 -framerate 30 -t "$DUR" -i work/cover.jpg \
+            -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
             -i work/audio.mp3 \
-            -loop 1 -framerate 30 -t "$DUR" -i assets/tonearm.png \
             -filter_complex "\
-              [0:v]scale=1280:720[bg];\
-              [1:v]scale=420:420,format=rgba[cover];\
-              [bg][cover]overlay=x=120:y=100:format=auto[withcover];\
-              [3:v]format=rgba[arm];\
-              [withcover][arm]overlay=x=0:y=0:format=auto[witharm];\
-              [witharm]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='%{ENV\:SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=580,\
-              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='%{ENV\:SUB_TITLE}':fontcolor=0x888888:fontsize=28:x=120:y=660,\
-              subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
+              [0:v]scale=420:420,format=rgba[cover_resized];\
+              [1:v]scale=1280:720,format=rgba[bg];\
+              [cover_resized]pad=1280:720:120:100:color=black@0[cover_padded];\
+              [cover_padded][bg]overlay=0:0:format=auto[video_base];\
+              [video_base]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='%{ENV\:SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=580,\
+                          drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='%{ENV\:SUB_TITLE}':fontcolor=0x888888:fontsize=28:x=120:y=660,\
+                          subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
             -map "[v]" -map 2:a \
             -c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p \
             -c:a aac -b:a 192k \
