@@ -63,7 +63,7 @@ jobs:
             -loop 1 -t "$DUR" -i assets/tonearm.png \
             -filter_complex "\
               [1:v]scale=420:420[cover];\
-              [0:v]scale=1280:720[bg];\
+              [0:v]scale=1280:720,format=rgb24[bg];\
               [bg][cover]overlay=x=120:y=100[withcover];\
               [3:v]scale=1280:720[arm];\
               [withcover][arm]overlay=0:0[witharm];\
