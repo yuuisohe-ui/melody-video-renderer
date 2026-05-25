@@ -20,9 +20,9 @@ WrapStyle: 2
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Cur,Noto Sans CJK SC,52,&H00FFFFFF,&H0000FFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,2,2,620,40,120,1
-Style: Prv,Noto Sans CJK SC,34,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,620,40,220,1
-Style: Nxt,Noto Sans CJK SC,34,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,620,40,40,1
+Style: Cur,Noto Sans CJK SC,64,&H00FFFFFF,&H0000FFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
+Style: Prv,Noto Sans CJK SC,42,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
+Style: Nxt,Noto Sans CJK SC,42,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
@@ -38,9 +38,9 @@ for (let i = 0; i < words.length; i++) {
   const prev = i > 0 ? cleanWord(words[i-1].word) : '';
   const next = i < words.length-1 ? cleanWord(words[i+1].word) : '';
 
-  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,{\\fad(200,200)},${prev}`);
-lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,{\\fad(200,200)},${text}`);
-if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,{\\fad(200,200)},${next}`);
+  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an5\\pos(950,260)}${prev}`);
+  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${text}`);
+  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an5\\pos(950,460)}${next}`);
 }
 
 fs.writeFileSync('work/subs.ass', header + lines.join('\n'));
