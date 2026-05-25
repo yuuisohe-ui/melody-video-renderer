@@ -28,18 +28,49 @@ Style: Nxt,Noto Sans CJK SC,42,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
 `;
 
-let lines = [];
+// 按\n断句
+const sentences = [];
+let cur = [];
 
 for (let i = 0; i < words.length; i++) {
-  const text = cleanWord(words[i].word);
+  const w = words[i];
+  // 兼容 startS/start_s 两种字段名
+  w.startS = w.startS ?? w.start_s ?? 0;
+  w.endS = w.endS ?? w.end_s ?? 0;
+
+  if (w.word === '\n' || w.word === '\n\n') {
+    if (cur.length > 0) {
+      sentences.push(cur);
+      cur = [];
+    }
+    continue;
+  }
+  if (w.word === ' ') continue;
+  if (!w.success && w.success !== undefined) continue;
+  const text = cleanWord(w.word);
   if (!text) continue;
-  const start = i === 0 ? 0 : (words[i].startS || 0);
-  const end = i < words.length-1 ? (words[i+1].startS || words[i].endS) : words[i].endS;
-  const prev = i > 0 ? cleanWord(words[i-1].word) : '';
-  const next = i < words.length-1 ? cleanWord(words[i+1].word) : '';
+  cur.push(w);
+}
+if (cur.length > 0) sentences.push(cur);
+
+let lines = [];
+
+for (let i = 0; i < sentences.length; i++) {
+  const sent = sentences[i];
+  const start = i === 0 ? 0 : sent[0].startS;
+  const end = i < sentences.length-1 ? sentences[i+1][0].startS : sent[sent.length-1].endS;
+
+  // 卡拉OK效果
+  const karaokeText = sent.map(w => {
+    const cs = Math.max(1, Math.round((w.endS - w.startS) * 100));
+    return `{\\kf${cs}}${cleanWord(w.word)}`;
+  }).join('');
+
+  const prev = i > 0 ? sentences[i-1].map(w => cleanWord(w.word)).join('') : '';
+  const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join('') : '';
 
   if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an5\\pos(950,260)}${prev}`);
-  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${text}`);
+  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${karaokeText}`);
   if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an5\\pos(950,460)}${next}`);
 }
 
