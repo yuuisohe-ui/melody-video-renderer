@@ -59,9 +59,9 @@ for (let i = 0; i < sentences.length; i++) {
   const prev = i > 0 ? sentences[i-1].map(w => cleanWord(w.word)).join(' ') : '';
   const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join(' ') : '';
 
-  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an4\\pos(650,260)}${prev}`);
-  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an4\\pos(650,360)}${text}`);
-  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an4\\pos(650,460)}${next}`);
+  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an5\\pos(950,260)}${prev}`);
+  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${text}`);
+  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an5\\pos(950,460)}${next}`);
 }
 
 fs.writeFileSync('work/subs.ass', header + lines.join('\n'));
