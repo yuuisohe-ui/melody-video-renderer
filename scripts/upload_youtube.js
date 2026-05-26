@@ -10,13 +10,26 @@ const yt = google.youtube({ version: 'v3', auth: oauth2 });
 
 function buildLrc(alignedWords) {
   if (!alignedWords || alignedWords.length === 0) return '';
-  return alignedWords.map(w => {
-    const totalSec = w.startS || 0;
-    const min = Math.floor(totalSec / 60);
-    const sec = (totalSec % 60).toFixed(2).padStart(5, '0');
-    const word = (w.word || '').replace(/\n/g, ' ').trim();
-    return `[${String(min).padStart(2,'0')}:${sec}] ${word}`;
-  }).join('\n');
+  
+  const lines = [];
+  let cur = [];
+  
+  for (const w of alignedWords) {
+    if (w.word === ' ') continue;
+    const text = (w.word || '').replace(/\n/g, '').trim();
+    if (!text) continue;
+    cur.push(w);
+    if ((w.word || '').includes('\n')) {
+      const start = cur[0].startS || cur[0].start_s || 0;
+      const min = Math.floor(start / 60);
+      const sec = (start % 60).toFixed(2).padStart(5, '0');
+      const lineText = cur.map(w => (w.word || '').replace(/\n/g, '').trim()).join(' ');
+      lines.push(`[${String(min).padStart(2,'0')}:${sec}] ${lineText}`);
+      cur = [];
+    }
+  }
+  
+  return lines.join('\n');
 }
 
 async function main() {
@@ -26,7 +39,7 @@ async function main() {
   try {
     alignedWords = JSON.parse(process.env.ALIGNED_WORDS || '[]');
   } catch(e) {}
-
+  
   const lrc = buildLrc(alignedWords);
   
   const description = `Generated with 멜로디 클래스 AI Lyric Video Studio
