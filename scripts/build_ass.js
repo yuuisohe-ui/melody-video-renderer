@@ -35,16 +35,15 @@ for (let i = 0; i < words.length; i++) {
   const w = words[i];
   w.startS = w.startS ?? w.start_s ?? 0;
   w.endS = w.endS ?? w.end_s ?? 0;
-
-  if (w.word === '\n' || w.word === '\n\n') {
-    if (cur.length > 0) { sentences.push(cur); cur = []; }
-    continue;
-  }
   if (w.word === ' ') continue;
   if (!w.success && w.success !== undefined) continue;
   const text = cleanWord(w.word);
   if (!text) continue;
   cur.push(w);
+  if (w.word.includes('\n')) {
+    sentences.push(cur);
+    cur = [];
+  }
 }
 if (cur.length > 0) sentences.push(cur);
 
@@ -53,16 +52,16 @@ let lines = [];
 for (let i = 0; i < sentences.length; i++) {
   const sent = sentences[i];
   const start = i === 0 ? 0 : sent[0].startS;
-  const end = i < sentences.length-1 
+  const end = i < sentences.length-1
     ? (sentences[i+1][0].startS || sentences[i+1][0].start_s || sent[sent.length-1].endS)
     : sent[sent.length-1].endS;
-  const text = sent.map(w => cleanWord(w.word)).join('');
-  const prev = i > 0 ? sentences[i-1].map(w => cleanWord(w.word)).join('') : '';
-  const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join('') : '';
+  const text = sent.map(w => cleanWord(w.word)).join(' ');
+  const prev = i > 0 ? sentences[i-1].map(w => cleanWord(w.word)).join(' ') : '';
+  const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join(' ') : '';
 
-  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an5\\pos(950,260)}${prev}`);
-  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an5\\pos(950,360)}${text}`);
-  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an5\\pos(950,460)}${next}`);
+  if (prev) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Prv,,0,0,0,,{\\an4\\pos(650,260)}${prev}`);
+  lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Cur,,0,0,0,,{\\an4\\pos(650,360)}${text}`);
+  if (next) lines.push(`Dialogue: 0,${fmt(start)},${fmt(end)},Nxt,,0,0,0,,{\\an4\\pos(650,460)}${next}`);
 }
 
 fs.writeFileSync('work/subs.ass', header + lines.join('\n'));
