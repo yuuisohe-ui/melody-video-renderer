@@ -88,33 +88,27 @@ jobs:
       - name: Send callback to Supabase
         if: success()
         env:
-          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
           CALLBACK_URL: ${{ github.event.client_payload.callback_url }}
+          CALLBACK_SECRET: ${{ github.event.client_payload.callback_secret }}
           JOB_ID: ${{ github.event.client_payload.job_id }}
         run: |
           VIDEO_ID=$(node -e "console.log(require('./work/result.json').videoId)")
           VIDEO_URL=$(node -e "console.log(require('./work/result.json').url)")
-          TS=$(date +%s)
           BODY="{\"job_id\":\"${JOB_ID}\",\"status\":\"done\",\"youtube_video_id\":\"${VIDEO_ID}\",\"youtube_url\":\"${VIDEO_URL}\"}"
-          SIG=$(echo -n "${TS}.${BODY}" | openssl dgst -sha256 -hmac "$CALLBACK_SECRET" | awk '{print $2}')
           curl -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
-            -H "x-timestamp: ${TS}" \
-            -H "x-signature: ${SIG}" \
+            -H "x-callback-secret: ${CALLBACK_SECRET}" \
             -d "${BODY}"
 
       - name: Send failure callback
         if: failure()
         env:
-          CALLBACK_SECRET: ${{ secrets.CALLBACK_SECRET }}
           CALLBACK_URL: ${{ github.event.client_payload.callback_url }}
+          CALLBACK_SECRET: ${{ github.event.client_payload.callback_secret }}
           JOB_ID: ${{ github.event.client_payload.job_id }}
         run: |
-          TS=$(date +%s)
           BODY="{\"job_id\":\"${JOB_ID}\",\"status\":\"failed\",\"error\":\"render failed\"}"
-          SIG=$(echo -n "${TS}.${BODY}" | openssl dgst -sha256 -hmac "$CALLBACK_SECRET" | awk '{print $2}')
           curl -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
-            -H "x-timestamp: ${TS}" \
-            -H "x-signature: ${SIG}" \
+            -H "x-callback-secret: ${CALLBACK_SECRET}" \
             -d "${BODY}"
