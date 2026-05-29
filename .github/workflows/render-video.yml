@@ -85,7 +85,7 @@ jobs:
               [1:v]scale=1280:720,format=rgba[bg];\
               [cover_resized]pad=1280:720:181:128:color=black@0[cover_padded];\
               [cover_padded][bg]overlay=0:0:format=auto[video_base];\
-              [4:v]format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)*(0.4+0.6*sin(2*PI*t/3.5))'[glow_anim];\
+              [4:v]format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)*(0.4+0.6*sin(2*PI*T/3.5))'[glow_anim];\
               [video_base][glow_anim]overlay=x=181:y=128:format=auto[v_glow];\
               [v_glow]drawbox=x=112:y=534:w=4:h=70:color=0x89c4d4@0.85:t=fill,\
               drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc:text='${SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=538:shadowx=3:shadowy=3:shadowcolor=black@0.55,\
