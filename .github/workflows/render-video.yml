@@ -62,6 +62,12 @@ jobs:
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
         run: node scripts/build_ass.js
 
+      - name: Generate waveform and cover glow
+        run: |
+          ffmpeg -y -i work/audio.mp3 work/audio.wav 2>/dev/null
+          python3 scripts/generate_waveform.py
+          python3 scripts/generate_cover_glow.py
+
       - name: Render video with ffmpeg
         env:
           SONG_TITLE: ${{ github.event.client_payload.song_title }}
@@ -72,14 +78,20 @@ jobs:
             -loop 1 -framerate 30 -t "$DUR" -i work/cover.jpg \
             -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
             -i work/audio.mp3 \
+            -loop 1 -framerate 30 -t "$DUR" -i work/waveform.png \
+            -loop 1 -framerate 30 -t "$DUR" -i work/cover_glow.png \
             -filter_complex "\
               [0:v]scale=328:328,format=rgba[cover_resized];\
               [1:v]scale=1280:720,format=rgba[bg];\
               [cover_resized]pad=1280:720:181:128:color=black@0[cover_padded];\
               [cover_padded][bg]overlay=0:0:format=auto[video_base];\
-              [video_base]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='${SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=580,\
-              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스 · 노래 기반 언어 교육 플랫폼':fontcolor=0x888888:fontsize=28:x=120:y=660,\
-              subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v]" \
+              [4:v]format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)*(0.4+0.6*sin(2*PI*t/3.5))'[glow_anim];\
+              [video_base][glow_anim]overlay=x=181:y=128:format=auto[v_glow];\
+              [v_glow]drawbox=x=112:y=534:w=4:h=58:color=0x89c4d4@0.85:t=fill,\
+              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc:text='${SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=538:shadowx=3:shadowy=3:shadowcolor=black@0.55,\
+              drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스 · 노래 기반 언어 교육 플랫폼':fontcolor=0x89c4d4:fontsize=24:x=120:y=596:shadowx=1:shadowy=1:shadowcolor=black@0.4,\
+              subtitles='work/subs.ass':fontsdir=/usr/share/fonts[v_text];\
+              [v_text][3:v]overlay=x=0:y=660[v]" \
             -map "[v]" -map 2:a \
             -c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p \
             -c:a aac -b:a 192k \
