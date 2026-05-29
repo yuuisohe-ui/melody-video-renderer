@@ -66,7 +66,6 @@ try:
         "prompt": prompt,
         "n": 1,
         "size": "512x512",
-        "response_format": "url",
     })
     print(result["data"][0]["url"])
 except Exception as e:
