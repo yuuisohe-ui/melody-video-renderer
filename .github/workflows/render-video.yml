@@ -73,9 +73,9 @@ jobs:
             -loop 1 -framerate 30 -t "$DUR" -i work/vinyl_bg.png \
             -i work/audio.mp3 \
             -filter_complex "\
-              [0:v]scale=328:328,format=rgba,rotate=2*PI*t/1.8:c=black@0:ow=iw:oh=ih[cover_rot];\
+              [0:v]scale=328:328,format=rgba[cover_resized];\
               [1:v]scale=1280:720,format=rgba[bg];\
-              [cover_rot]pad=1280:720:181:128:color=black@0[cover_padded];\
+              [cover_resized]pad=1280:720:181:128:color=black@0[cover_padded];\
               [cover_padded][bg]overlay=0:0:format=auto[video_base];\
               [video_base]drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc:text='${SAFE_TITLE}':fontcolor=white:fontsize=52:x=120:y=580,\
               drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:text='멜로디 클래스 · 노래 기반 언어 교육 플랫폼':fontcolor=0x888888:fontsize=28:x=120:y=660,\

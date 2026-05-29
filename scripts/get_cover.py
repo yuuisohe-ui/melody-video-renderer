@@ -9,14 +9,19 @@ lyrics_text = os.environ.get('LYRICS_TEXT', '').strip()
 def openai_post(endpoint, payload):
     req = urllib.request.Request(
         f"https://api.openai.com/v1/{endpoint}",
-        data=json.dumps(payload).encode(),
+        data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
         },
     )
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')
+        print(f"[get_cover] HTTP {e.code} from {endpoint}: {body}", file=sys.stderr)
+        raise
 
 
 def generate_prompt():
