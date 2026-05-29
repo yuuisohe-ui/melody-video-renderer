@@ -35,7 +35,10 @@ def generate_prompt():
                         "content": (
                             "You are an art director. Given a song title and lyrics, "
                             "write a vivid image generation prompt (English, under 200 characters) "
-                            "for an album cover illustration. Cinematic, artistic style. No text or typography in the image."
+                            "for an album cover illustration. "
+                            "The song title is the primary inspiration — capture its mood, imagery, and emotion first. "
+                            "Use the lyrics only as secondary reference to enrich the atmosphere. "
+                            "Cinematic, artistic style. No text or typography in the image."
                         ),
                     },
                     {
