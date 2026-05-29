@@ -54,7 +54,7 @@ for (let i = 0; i < sentences.length; i++) {
   const start = i === 0 ? 0 : sent[0].startS;
   const end = i < sentences.length-1
     ? (sentences[i+1][0].startS || sentences[i+1][0].start_s || sent[sent.length-1].endS)
-    : sent[sent.length-1].endS;
+    : 99999;
   const text = sent.map(w => cleanWord(w.word)).join(' ');
   const prev = i > 0 ? sentences[i-1].map(w => cleanWord(w.word)).join(' ') : '';
   const next = i < sentences.length-1 ? sentences[i+1].map(w => cleanWord(w.word)).join(' ') : '';
