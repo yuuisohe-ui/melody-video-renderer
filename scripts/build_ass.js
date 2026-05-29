@@ -21,8 +21,8 @@ WrapStyle: 2
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
 Style: Cur,Noto Sans CJK SC,64,&H00FFFFFF,&H0000FFFF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
-Style: Prv,Noto Sans CJK SC,42,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
-Style: Nxt,Noto Sans CJK SC,42,&H88AAAAAA,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,1,5,0,0,0,1
+Style: Prv,Noto Sans CJK SC,42,&H99CCCCCC,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: Nxt,Noto Sans CJK SC,42,&H99CCCCCC,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
