@@ -43,12 +43,12 @@ jobs:
         run: |
           mkdir -p work
           curl -fsSL --retry 3 -o work/audio.mp3 "$AUDIO_URL"
-          COVER_URL=$(python3 scripts/get_cover.py)
-          if [ -z "$COVER_URL" ]; then
-            COVER_URL="https://placehold.co/420x420/1a1a2e/ffffff?text=Music"
+          python3 scripts/get_cover.py
+          if [ ! -s work/cover_raw.jpg ]; then
+            echo "[get_cover] Falling back to placeholder" >&2
+            curl -fsSL --retry 3 -o work/cover_raw.jpg \
+              "https://placehold.co/420x420/1a1a2e/ffffff?text=Music"
           fi
-          echo "$COVER_URL" > /tmp/cover_url.txt
-          curl -fsSL --retry 3 -o work/cover_raw.jpg "$COVER_URL"
           ffmpeg -y -i work/cover_raw.jpg -vf "crop=min(iw\,ih):min(iw\,ih),scale=420:420" -update 1 -frames:v 1 work/cover.jpg
           echo "Cover size: $(wc -c < work/cover.jpg) bytes"
 

@@ -1,4 +1,4 @@
-import os, sys, json, urllib.request
+import os, sys, json, base64, urllib.request, urllib.error
 
 api_key = os.environ.get('OPENAI_API_KEY', '')
 song_title = os.environ.get('SONG_TITLE', '')
@@ -34,7 +34,7 @@ def generate_prompt():
                         "role": "system",
                         "content": (
                             "You are an art director. Given a song title and lyrics, "
-                            "write a vivid DALL-E image generation prompt (English, under 200 characters) "
+                            "write a vivid image generation prompt (English, under 200 characters) "
                             "for an album cover illustration. Cinematic, artistic style. No text or typography in the image."
                         ),
                     },
@@ -62,12 +62,20 @@ try:
     print(f"[get_cover] Using prompt: {prompt}", file=sys.stderr)
 
     result = openai_post("images/generations", {
-        "model": "dall-e-2",
+        "model": "gpt-image-1",
         "prompt": prompt,
         "n": 1,
-        "size": "512x512",
+        "size": "1024x1024",
+        "quality": "low",
     })
-    print(result["data"][0]["url"])
+
+    b64 = result["data"][0]["b64_json"]
+    os.makedirs("work", exist_ok=True)
+    with open("work/cover_raw.jpg", "wb") as f:
+        f.write(base64.b64decode(b64))
+    print(f"[get_cover] Image saved to work/cover_raw.jpg", file=sys.stderr)
+    print("ok")
+
 except Exception as e:
-    print(f"[get_cover] DALL-E error: {e}", file=sys.stderr)
+    print(f"[get_cover] error: {e}", file=sys.stderr)
     print("")
